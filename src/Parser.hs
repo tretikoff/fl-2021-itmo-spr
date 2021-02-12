@@ -1,130 +1,82 @@
-module Parser where
+{-# LANGUAGE DeriveFunctor #-}
+module Logic2021Khalansky01 where
+import qualified Data.Map as M
+import Control.Monad (replicateM)
 
-import Control.Applicative ((<|>))
-import Data.Char (isDigit, digitToInt)
-import Text.Printf (printf)
+infixr 3 :->
+infixl 4 :|
+infixl 5 :&
 
-data Operator = Plus
-              | Mult
-              | Pow
-              deriving (Show, Eq)
+data Preterm a = Var a
+               | Preterm a :& Preterm a
+               | Preterm a :| Preterm a
+               | Preterm a :-> Preterm a
+               | Not (Preterm a)
+               deriving (Show, Eq, Functor)
 
-toOp :: Char -> Operator
-toOp '+' = Plus
-toOp '*' = Mult
-toOp '^' = Pow
-toOp c = error $ printf "Unsupported operator: %c" c
+{- |Вернуть либо оценку данной формулы на данных значениях переменных, либо,
+если переменных на входе не хватает, сообщить хотя бы одну переменную, которой
+нет.
 
-data Expr = BinOp Operator Expr Expr
-          | Num Int
-          deriving (Show, Eq)
+> tm = Var "a" :& Var "b" :| Var "c"
+> evalTerm tm (M.fromList [("a", True), ("b", False), ("c", True)])
+Right True
+> evalTerm tm (M.fromList [("a", True), ("b", False)])
+Left "c"
+-}
+evalTerm :: Ord a => Preterm a -> M.Map a Bool -> Either a Bool
+evalTerm (a :& b) m = case evalTerm a m of
+    Right True -> case evalTerm b m of
+        Right True -> Right True
+        Right False -> Right False
+        Left a -> Left a
+    Right False -> Right False
+    Left a -> Left a
 
-eval :: Expr -> Int
-eval (BinOp Plus l r) = eval l + eval r
-eval (BinOp Mult l r) = eval l * eval r
-eval (BinOp Pow l r) = eval l ^ eval r
-eval (Num x) = x
+evalTerm (a :| b) m = case evalTerm a m of
+    Right True -> Right True
+    Right False -> case evalTerm b m of
+        Right True -> Right True
+        Right False -> Right False
+        Left a -> Left a
+    Left a -> Left a
 
-data ParserType = Prefix | Infix deriving (Show)
+evalTerm (Var a) m = case M.lookup a m of
+    Just v -> Right v
+    Nothing -> Left a
 
-parse :: ParserType -> String -> Maybe Expr
-parse pType str =
-    case go pType str of
-      Just ("", e) -> Just e
-      _ -> Nothing
-  where
-    go Prefix = parsePrefix
-    go Infix  = parseInfix
+evalTerm (Not a) m = case evalTerm a m of
+    Right True -> Right False
+    Right False -> Right True
+    Left a -> Left a
 
--- Expr :: + Expr Expr
---       | * Expr Expr
---       | Digit
-parsePrefix :: String -> Maybe (String, Expr)
-parsePrefix (op : t) | op == '+' || op == '*' || op == '^' =
-  case parsePrefix t of
-    Just (t', l) ->
-      case parsePrefix t' of
-        Just (t'', r) -> Just (t'', BinOp (toOp op) l r)
-        Nothing -> Nothing
-    Nothing -> Nothing
-parsePrefix (d : t) | isDigit d =
-  Just (t, Num (digitToInt d))
-parsePrefix _ = Nothing
+evalTerm (a :-> b) m = case evalTerm a m of
+    Right True -> case evalTerm b m of
+        Right True -> Right True
+        Right False -> Right False
+        Left a -> Left a
+    Right False -> Right True
+    Left a -> Left a
 
--- Expr :: Expr + Expr
---       | Expr * Expr
---       | Digit
---       | ( Expr )
+tm = Var "a" :& Var "b" :| Var "c"
+--evalTerm tm (M.fromList [("a", True), ("b", False), ("c", True)])
+-- evalTerm tm (M.fromList [("a", True), ("b", False)])
 
--- Expr :: Слаг + Слаг + ... + Слаг
---       = Слаг (+ Слаг) (+ Слаг) .. (+ Слаг)
---       -> [Слаг] - fold ... -> BinOp Plus (BinOp Plus ...)...
--- Слаг :: Множ * Множ * ... * Множ
--- Множ :: Цифра | ( Expr )
--- [1,2,3] -> (1+2)+3
+type Term = Preterm Int
 
-binOp :: Operator -> [Expr] -> Expr
-binOp op = foldl1 (BinOp op)
+findMin :: Ord a => Preterm a -> a
+findMax :: Ord a => Preterm a -> a
+findMin (Var a) = a
+findMin (a1 :& a2) = min (findMin a1) (findMin a2)
+findMax (Var a) = a
+findMax (a1 :& a2) = max (findMax a1) (findMax a2)
 
-binOpR :: Operator -> [Expr] -> Expr
-binOpR op = foldr1 (BinOp op)
+propsEquiv :: Term -> Term -> Bool
+propsEquiv = undefined
 
-parseInfix :: String -> Maybe (String, Expr)
-parseInfix = parseSum
-
-parseOper :: String -> (String -> Maybe (String, Operator)) -> (String -> Maybe (String, Expr)) -> Maybe (String, [Expr])
-parseOper str parseOp parseExpr =
-  let first = parseExpr str in
-  case first of
-    Nothing -> Nothing
-    Just (t, e) ->
-      if null t
-      then Just ("", [e])
-      else
-        case parseOp t of
-          Just (t', _) ->
-            let rest = parseOper t' parseOp parseExpr in
-            ((e:) <$>) <$> rest
-          Nothing -> Just (t, [e])
-
-parseSum :: String ->  Maybe (String, Expr)
-parseSum str = (binOp Plus <$>) <$> parseOper str parsePlus parseMult
-
-parseMult :: String -> Maybe (String, Expr)
-parseMult str = (binOp Mult <$>) <$> parseOper str parseStar parsePow
-
-parsePow :: String -> Maybe (String, Expr)
-parsePow str = (binOpR Pow <$>) <$> parseOper str parseHat (\s -> parseDigit s <|> parseExprBr s)
-
-parseExprBr :: String -> Maybe (String, Expr)
-parseExprBr ('(' : t) =
-  case parseSum t of
-    Just ((')' : t'), e) -> Just (t', e)
-    _ -> Nothing
-parseExprBr _ = Nothing
-
-parsePlus :: String -> Maybe (String, Operator)
-parsePlus ('+' : t) = Just (t, Plus)
-parsePlus _ = Nothing
-
-parseStar :: String -> Maybe (String, Operator)
-parseStar ('*' : t) = Just (t, Mult)
-parseStar _ = Nothing
-
-parseHat :: String -> Maybe (String, Operator)
-parseHat ('^' : t) = Just (t, Pow)
-parseHat _ = Nothing
-
-parseDigit :: String -> Maybe (String, Expr)
-parseDigit (d : t) | isDigit d =
-  Just (t, Num (digitToInt d))
-parseDigit _ = Nothing
-
-plus :: Expr -> Expr -> Expr
-plus = BinOp Plus
-
-mult :: Expr -> Expr -> Expr
-mult = BinOp Mult
-
-pow :: Expr -> Expr -> Expr
-pow = BinOp Pow
+{-
+Согласно теореме про условия эквивалентности, есть два возможных варианта, как
+решать это задание: либо убедиться, что эквивалентность этих формул является
+тавтологией, либо проверить, что на всех входах данные формулы имеют равную
+оценку.
+-}
