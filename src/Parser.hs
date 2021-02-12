@@ -72,62 +72,29 @@ binOpR op = foldr1 (BinOp op)
 parseInfix :: String -> Maybe (String, Expr)
 parseInfix = parseSum
 
-parseSum :: String -> Maybe (String, Expr)
-parseSum str =
-    (binOp Plus <$>) <$> go str
-  where
-    go :: String -> Maybe (String, [Expr])
-    go str =
-      let first = parseMult str in
-      case first of
-        Nothing -> Nothing
-        Just (t, e) ->
-          if null t
-          then Just ("", [e])
-          else
-            case parsePlus t of
-              Just (t', _) ->
-                let rest = go t' in
-                ((e:) <$>) <$> rest
-              Nothing -> Just (t, [e])
+parseOper :: String -> (String -> Maybe (String, Operator)) -> (String -> Maybe (String, Expr)) -> Maybe (String, [Expr])
+parseOper str parseOp parseExpr =
+  let first = parseExpr str in
+  case first of
+    Nothing -> Nothing
+    Just (t, e) ->
+      if null t
+      then Just ("", [e])
+      else
+        case parseOp t of
+          Just (t', _) ->
+            let rest = parseOper t' parseOp parseExpr in
+            ((e:) <$>) <$> rest
+          Nothing -> Just (t, [e])
+
+parseSum :: String ->  Maybe (String, Expr)
+parseSum str = (binOp Plus <$>) <$> parseOper str parsePlus parseMult
 
 parseMult :: String -> Maybe (String, Expr)
-parseMult str =
-    (binOp Mult <$>) <$> go str
-  where
-    go :: String -> Maybe (String, [Expr])
-    go str =
-      let first = parsePow str in
-      case first of
-        Nothing -> Nothing
-        Just (t, e) ->
-          if null t
-          then Just ("", [e])
-          else
-            case parseStar t of
-              Just (t', _) ->
-                let rest = go t' in
-                ((e:) <$>) <$> rest
-              Nothing -> Just (t, [e])
+parseMult str = (binOp Mult <$>) <$> parseOper str parseStar parsePow
 
 parsePow :: String -> Maybe (String, Expr)
-parsePow str =
-    (binOpR Pow <$>) <$> go str
-  where
-    go :: String -> Maybe (String, [Expr])
-    go str =
-      let first = parseDigit str <|> parseExprBr str in
-      case first of
-        Nothing -> Nothing
-        Just (t, e) ->
-          if null t
-          then Just ("", [e])
-          else
-            case parseHat t of
-              Just (t', _) ->
-                let rest = go t' in
-                ((e:) <$>) <$> rest
-              Nothing -> Just (t, [e])
+parsePow str = (binOpR Pow <$>) <$> parseOper str parseHat (\s -> parseDigit s <|> parseExprBr s)
 
 parseExprBr :: String -> Maybe (String, Expr)
 parseExprBr ('(' : t) =
