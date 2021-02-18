@@ -26,3 +26,12 @@ unit_success = do
   parsingSuccess parse "+1*+2 3 4" (plus (Num 1) (mult (plus (Num 2) (Num 3)) (Num 4)))
   parsingSuccess parse "+1*^2 3 4" (plus (Num 1) (mult (pow (Num 2) (Num 3)) (Num 4)))
   parsingSuccess parse "+1^^2 3 4" (plus (Num 1) (pow (pow (Num 2) (Num 3)) (Num 4)))
+
+unit_spaces :: Assertion
+unit_spaces = do
+  parsingSuccess parse "    +1*^2 3 4" (plus (Num 1) (mult (pow (Num 2) (Num 3)) (Num 4)))
+  parsingSuccess parse "+1*^2 3 4    " (plus (Num 1) (mult (pow (Num 2) (Num 3)) (Num 4)))
+  parsingSuccess parse "+ 1 * ^ 2 3 4" (plus (Num 1) (mult (pow (Num 2) (Num 3)) (Num 4)))
+  parsingSuccess parse "+1*^2    3 4" (plus (Num 1) (mult (pow (Num 2) (Num 3)) (Num 4)))
+  parsingSuccess parse "+1*^2 3  4" (plus (Num 1) (mult (pow (Num 2) (Num 3)) (Num 4)))
+  parsingSuccess parse "+1 *\t^2 \n3 4" (plus (Num 1) (mult (pow (Num 2) (Num 3)) (Num 4)))

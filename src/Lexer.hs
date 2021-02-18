@@ -7,7 +7,7 @@ import Expr (Operator (..), toOp)
 
 -- "+77*    123 42" -lexer-> [Plus, Num 77, Mult, Num 123, Num 42]
 -- "+77*    123 42!" -lexer-> Oops
-data Token = Oper Operator | Number Int
+data Token = Oper Operator | Number Int | Lbr | Rbr
            deriving (Show, Eq)
 
 lexer :: String -> Maybe [Token]

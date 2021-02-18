@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a5051ad24e775f0506aea31b097dde6015d0dc5324825bc7a91510018da7cb05
+-- hash: 43bb0d9f02972f05d4f547bd988d68c78e4f2f332ffa0b946264c28bccf747b5
 
 name:           fl2021-itmo-spr
 version:        0.1.0.0
@@ -61,6 +61,7 @@ test-suite fl2021-itmo-spr-test
   other-modules:
       Test.Common
       Test.Expr
+      Test.Lexer
       Test.Parser.Infix
       Test.Parser.Prefix
       Paths_fl2021_itmo_spr
