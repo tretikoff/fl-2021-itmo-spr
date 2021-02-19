@@ -22,5 +22,11 @@ lexer (h:t) | isDigit h = do
   where
     accumulateNumber acc (d:t) | isDigit d = accumulateNumber (d:acc) t
     accumulateNumber acc t = return (t, reverse acc)
+lexer (h:t) | h == '(' = do
+    rest <- lexer t
+    return (Lbr : rest)
+lexer (h:t) | h == ')' = do
+    rest <- lexer t
+    return (Rbr : rest)
 lexer (h:t) | isSpace h = lexer t
 lexer _ = Nothing
