@@ -1,6 +1,6 @@
 module Parser.Infix where
 
-import Parser.Common (parseOp, parseDigit, parserEof)
+import Parser.Common (parserEof)
 import Control.Applicative ((<|>))
 import Data.Char (isDigit, digitToInt, isSpace)
 import Expr (Expr (..), Operator (..))
@@ -8,7 +8,9 @@ import Text.Printf (printf)
 import Lexer (Token (..), lexer)
 
 parse :: String -> Maybe Expr
-parse = parserEof parseSum
+parse str = do
+    x <- lexer str
+    parserEof parseSum x
 
 -- Expr :: Expr + Expr
 --       | Expr * Expr
@@ -31,37 +33,48 @@ binOp :: Associativity -> Operator -> [Expr] -> Expr
 binOp AssocL op = foldl1 (BinOp op)
 binOp AssocR op = foldr1 (BinOp op)
 
-parseInfix :: Associativity -> Operator -> (String -> Maybe ([Token], b)) -> (String -> Maybe ([Token], Expr)) -> String -> Maybe ([Token], Expr)
-parseInfix ass oper constr next str = do
-    tokens <- lexer str
-    go tokens
+parseInfix :: Associativity -> Operator -> ([Token] -> Maybe ([Token], b)) -> ([Token] -> Maybe ([Token], Expr)) -> [Token] -> Maybe ([Token], Expr)
+parseInfix assoc op parseOp nextParser str =
+    (binOp assoc op <$>) <$> go str
   where
-    go (Oper op : t) = do
-      (t', l) <- go t
-      (t'', r) <- go t'
-      return (t'', binOp op l r)
-    go (Number number : t) = do
---      if null t return (t, Num number) else
-      return (t, Num number)
-    go _ = Nothing
+    go :: [Token] -> Maybe ([Token], [Expr])
+    go str = do
+      first@(t, e) <- nextParser str
+      if null t
+      then return (t, [e])
+      else
+        ( do
+          (t', _) <- parseOp t
+          let rest = go t'
+          ((e:) <$>) <$> rest
+        )
+        <|>
+        return (t, [e])
 
 spaces :: String -> Maybe (String, ())
 spaces (h:t) | isSpace h = spaces t
 spaces t = return (t, ())
 
-parseSum :: String -> Maybe (String, Expr)
-parseSum = parseInfix AssocL Plus (parseOp '+') parseMult
+parseDigit :: [Token] -> Maybe ([Token], Expr)
+parseDigit ((Number a): xs) = Just (xs, Num a)
+parseDigit _ = Nothing
 
-parseMult :: String -> Maybe (String, Expr)
-parseMult = parseInfix AssocL Mult (parseOp '*') parsePow
+parseOp :: Operator -> [Token] -> Maybe ([Token], Operator)
+parseOp op (x: xs) = if x == (Oper op) then Just (xs, op) else Nothing
 
-parsePow :: String -> Maybe (String, Expr)
-parsePow = parseInfix AssocR Pow (parseOp '^') (\str -> parseDigit str <|> parseExprBr str)
+parseSum :: [Token] -> Maybe ([Token], Expr)
+parseSum = parseInfix AssocL Plus (parseOp Plus) parseMult
 
-parseExprBr :: String -> Maybe (String, Expr)
-parseExprBr ('(' : t) =
+parseMult :: [Token] -> Maybe ([Token], Expr)
+parseMult = parseInfix AssocL Mult (parseOp Mult) parsePow
+
+parsePow :: [Token] -> Maybe ([Token], Expr)
+parsePow = parseInfix AssocR Pow (parseOp Pow) (\str -> parseDigit str <|> parseExprBr str)
+
+parseExprBr :: [Token] -> Maybe ([Token], Expr)
+parseExprBr (Lbr : t) =
   case parseSum t of
-    Just (')' : t', e) -> Just (t', e)
+    Just (Rbr : t', e) -> Just (t', e)
     _ -> Nothing
 parseExprBr _ = Nothing
 
