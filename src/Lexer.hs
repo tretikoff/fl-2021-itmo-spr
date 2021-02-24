@@ -1,8 +1,6 @@
 module Lexer where
 
-import Control.Applicative ((<|>))
-import Data.Char (isDigit, digitToInt, isSpace)
-import Text.Printf (printf)
+import Data.Char (isDigit, isSpace)
 import Expr (Operator (..), toOp)
 
 -- "+77*    123 42" -lexer-> [Plus, Num 77, Mult, Num 123, Num 42]
@@ -23,4 +21,6 @@ lexer (h:t) | isDigit h = do
     accumulateNumber acc (d:t) | isDigit d = accumulateNumber (d:acc) t
     accumulateNumber acc t = return (t, reverse acc)
 lexer (h:t) | isSpace h = lexer t
+lexer ('(':t) = (Lbr :) <$> lexer t
+lexer (')':t) = (Rbr :) <$> lexer t
 lexer _ = Nothing

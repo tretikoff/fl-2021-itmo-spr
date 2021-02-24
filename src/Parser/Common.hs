@@ -16,3 +16,7 @@ parserEof :: MonadFail m => (t -> m ([a], b)) -> t -> m b
 parserEof parser str = do
   ([], r) <- parser str
   return r
+
+satisfy :: (b -> Bool) -> [b] -> Maybe ([b], b)
+satisfy p (h:t) | p h = return (t, h)
+satisfy _ _ = Nothing

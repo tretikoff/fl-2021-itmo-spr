@@ -3,7 +3,6 @@ module Main where
 import Parser
 import Expr (eval)
 
-import Data.Maybe (fromMaybe)
 import Options.Applicative
 import System.FilePath ((<.>))
 import Text.Printf (printf)
