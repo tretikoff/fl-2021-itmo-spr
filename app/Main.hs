@@ -84,10 +84,10 @@ defaultOutFile = "str.out"
 runParser :: ParserType -> String -> FilePath -> IO ()
 runParser pType s path =
   case parse pType s of
-    Just expr ->
+    Right expr ->
       writeFile path (printf "Expr:\n%s\n\nValue:\n%d\n" (show expr) (eval expr))
-    Nothing ->
-      writeFile path "Syntax error"
+    Left err ->
+      writeFile path err
 
 dumpIntoStdout :: Bool -> String -> FilePath -> IO ()
 dumpIntoStdout False _ _ = return ()

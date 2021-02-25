@@ -1,22 +1,32 @@
 module Parser.Common where
 
-import Data.Char (isDigit, digitToInt)
-import Expr (Operator (..), Expr (..), toOp)
+import Data.Char (isDigit, isAlpha)
+import Parser.Combinators ( Parser, satisfy )
+import Control.Applicative (some)
 
-parseOp :: Char -> String -> Maybe (String, Operator)
-parseOp c (h : t) | c == h = Just (t, toOp c)
-parseOp _ _ = Nothing
+digit :: Parser String Char
+digit = satisfy isDigit
 
-parseDigit :: String -> Maybe (String, Expr)
-parseDigit (d : t) | isDigit d =
-  Just (t, Num (digitToInt d))
-parseDigit _ = Nothing
+digit' :: Parser String Char
+digit' = satisfy (\x -> isDigit x && x /= '0')
 
-parserEof :: MonadFail m => (t -> m ([a], b)) -> t -> m b
-parserEof parser str = do
-  ([], r) <- parser str
-  return r
+alpha :: Parser String Char
+alpha = satisfy isAlpha
 
-satisfy :: (b -> Bool) -> [b] -> Maybe ([b], b)
-satisfy p (h:t) | p h = return (t, h)
-satisfy _ _ = Nothing
+-- number :: not empty, consists of digits
+number :: Parser String Int
+number = do
+  num <- some digit
+  return $ (read num :: Int)
+
+data Associativity = LeftAssoc  -- x `op` y `op` z == (x `op` y) `op` z
+                   | RightAssoc -- x `op` y `op` z == x `op` (y `op` z)
+                   | NoAssoc    -- non associative operation:
+                                -- x `op` y -- ok
+                                -- x `op` y `op` z -- not ok
+
+uberExpr :: [(Parser i op, Associativity)]
+         -> Parser i ast
+         -> (op -> ast -> ast -> ast)
+         -> Parser i ast
+uberExpr = undefined

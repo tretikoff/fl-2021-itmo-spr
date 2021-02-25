@@ -1,13 +1,13 @@
 module Test.Common where
 
-import Data.Maybe (isNothing, isJust, fromJust)
+import Data.Either (isRight, isLeft, fromRight)
 import Test.Tasty.HUnit ((@?=), Assertion, assertBool)
 
-syntaxError :: (String -> Maybe a) -> String -> Assertion
-syntaxError parser input = assertBool "Expected syntax error" (isNothing $ parser input)
+syntaxError :: (String -> Either a b) -> String -> Assertion
+syntaxError parser input = assertBool "Expected syntax error" (isLeft $ parser input)
 
-parsingSuccess :: (Show a, Eq a) => (String -> Maybe a) -> String -> a -> Assertion
+parsingSuccess :: (Show b, Eq b) => (String -> Either a b) -> String -> b -> Assertion
 parsingSuccess parser input exp = do
   let result = parser input
-  assertBool "Expected parsing to succeed" (isJust result)
-  fromJust result @?= exp
+  assertBool "Expected parsing to succeed" (isRight result)
+  fromRight undefined result @?= exp

@@ -1,12 +1,13 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Parser.Combinators where
 
-import Control.Applicative
+import Control.Applicative ( Alternative(..) )
 import Text.Printf (printf)
-import Data.Char (isDigit, isAlpha)
+import Data.Char (isSpace)
 
 data Result input a = Success input a
                     | Failure String
+                    deriving (Show, Eq)
 
 newtype Parser input a = Parser { runParser :: input -> Result input a }
 
@@ -69,21 +70,6 @@ satisfy pred = do
   then return x
   else fail "Predicate failed"
 
-digit :: Parser String Char
-digit = satisfy isDigit
-
-digit' :: Parser String Char
-digit' = satisfy (\x -> isDigit x && x /= '0')
-
-alpha :: Parser String Char
-alpha = satisfy isAlpha
-
--- number :: not empty, digits
-number :: Parser String Int
-number = do
-  num <- some digit
-  return $ (read num :: Int)
-
 sepBy :: Parser input sep -> Parser input elem -> Parser input [elem]
 sepBy sep elem = sepBy1 sep elem <|> return []
 
@@ -93,11 +79,37 @@ sepBy1 sep elem = do
   t <- many (sep *> elem)
   return (h : t)
 
-
 brackets :: Parser input lbr -> Parser input rbr -> Parser input a -> Parser input a
 brackets lbr rbr p = lbr *> p <* rbr
--- = do
---   lbr
---   x <- p
---   rbr
---   return x
+
+whitespaces :: Parser String ()
+whitespaces =
+  many (satisfy isSpace) *> return ()
+
+eof :: (Show a) => Parser [a] ()
+eof = Parser $ \input ->
+  case input of
+    [] -> Success [] ()
+    (h:_) -> Failure $ printf "Syntax error on %s. Expected EOF" (show h)
+
+parseMaybe :: Parser input a -> input -> Maybe a
+parseMaybe p i =
+  case runParser p i of
+    Success _ x -> Just x
+    _ -> Nothing
+
+parseEither :: Parser input a -> input -> Either String a
+parseEither p i =
+  case runParser p i of
+    Success _ x -> Right x
+    Failure err -> Left err
+
+symbol :: Char -> Parser String Char
+symbol c = satisfy (==c)
+
+word :: String -> Parser String String
+word [] = return []
+word (h:t) = do
+  x <- symbol h
+  y <- word t
+  return (x:y)

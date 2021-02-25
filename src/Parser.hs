@@ -6,7 +6,7 @@ import qualified Parser.Infix
 
 data ParserType = Prefix | Infix deriving (Show)
 
-parse :: ParserType -> String -> Maybe Expr
+parse :: ParserType -> String -> Either String Expr
 parse Prefix = Parser.Prefix.parse
 parse Infix  = Parser.Infix.parse
 

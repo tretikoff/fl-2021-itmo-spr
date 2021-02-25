@@ -2,16 +2,32 @@ module Expr where
 
 import Text.Printf (printf)
 
-data Operator = Plus
+data Operator = Pow
               | Mult
-              | Pow
+              | Div
+              | Plus
+              | Minus
+              | Eq
+              | Neq
+              | Le
+              | Lt
+              | Ge
+              | Gt
               deriving (Show, Eq)
 
-toOp :: Char -> Operator
-toOp '+' = Plus
-toOp '*' = Mult
-toOp '^' = Pow
-toOp c = error $ printf "Unsupported operator: %c" c
+toOp :: String -> Operator
+toOp "^" = Pow
+toOp "*" = Mult
+toOp "/" = Div
+toOp "+" = Plus
+toOp "-" = Minus
+toOp "==" = Eq
+toOp "/=" = Neq
+toOp "<=" = Le
+toOp "<" = Lt
+toOp ">=" = Ge
+toOp ">" = Gt
+toOp s = error $ printf "Unsupported operator: %s" s
 
 data Expr = BinOp Operator Expr Expr
           | Num Int
@@ -23,11 +39,14 @@ eval (BinOp Mult l r) = eval l * eval r
 eval (BinOp Pow l r) = eval l ^ eval r
 eval (Num x) = x
 
-plus :: Expr -> Expr -> Expr
-plus = BinOp Plus
-
-mult :: Expr -> Expr -> Expr
-mult = BinOp Mult
-
-pow :: Expr -> Expr -> Expr
 pow = BinOp Pow
+mult = BinOp Mult
+div' = BinOp Div
+plus = BinOp Plus
+minus = BinOp Minus
+eq' = BinOp Eq
+neq = BinOp Neq
+le = BinOp Le
+lt = BinOp Lt
+ge = BinOp Ge
+gt = BinOp Gt
