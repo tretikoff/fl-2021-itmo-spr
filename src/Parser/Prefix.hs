@@ -4,9 +4,41 @@ import Parser.Common (parserEof)
 import Expr (Expr (..), toOp)
 import Data.Char ( isDigit, isSpace )
 import Lexer (Token (..), lexer)
+import Parser.Combinators
+import Control.Applicative
+
+parseMaybe :: Parser input a -> input -> Maybe a
+parseMaybe p i =
+  case runParser p i of
+    Success _ x -> Just x
+    _ -> Nothing
+
+eof :: Show a => Parser [a] ()
+eof = Parser $ \input ->
+  case input of
+    [] -> Success [] ()
+    _ -> Failure "Expected eof"
 
 parse :: String -> Maybe Expr
-parse = parserEof parsePrefix
+parse = parseMaybe (whitespaces *> parse' <* whitespaces <* eof)
+
+whitespaces = many (satisfy isSpace)
+
+parseOp = toOp <$> satisfy (`elem` "+*^")
+
+parse' :: Parser String Expr
+parse' =
+  ( Num <$> number ) <|>
+  ( do
+    op <- parseOp
+    whitespaces
+    l <- parse'
+    whitespaces
+    r <- parse'
+    return (BinOp op l r)
+  )
+
+
 
 -- scannerless parsing
 parsePrefixScannerless :: String -> Maybe (String, Expr)
