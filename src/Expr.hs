@@ -31,6 +31,7 @@ toOp s = error $ printf "Unsupported operator: %s" s
 
 data Expr = BinOp Operator Expr Expr
           | Num Int
+          | Ident String
           deriving (Show, Eq)
 
 eval :: Expr -> Int
