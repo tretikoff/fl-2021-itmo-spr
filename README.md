@@ -47,4 +47,4 @@ uberExpr :: [(Parser i op, Associativity)]
    2. `stack exec exe -- -i test.txt -o test.out` для запуска парсера для арифметики в инфиксной записи на содержимом файла `test.txt`; результат будет записан в файл `test.out`.
 4. `stack run exe -- <args>` для запуска консольного приложения с предварительной сборкой проекта.
 
-[Запись лекции](https://drive.google.com/file/d/1OFW50lFls7Kkd212Gpui7KlD4-mp5p2w/view?usp=sharing)
+[Запись лекции](https://drive.google.com/file/d/10oPRCSfJhd2Aww4Wuw2zTisvUOX3YDXo/view?usp=sharing)
