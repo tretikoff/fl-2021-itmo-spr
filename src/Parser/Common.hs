@@ -29,4 +29,9 @@ uberExpr :: [(Parser i op, Associativity)]
          -> Parser i ast
          -> (op -> ast -> ast -> ast)
          -> Parser i ast
-uberExpr = undefined
+uberExpr x el_p createBinAst = local x where
+    local ((p, ass) : xs) = case ass of
+        LeftAssoc ->
+        RightAssoc ->
+        NoAssoc ->
+    local [] = el_p
