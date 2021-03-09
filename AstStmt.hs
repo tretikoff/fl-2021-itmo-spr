@@ -15,6 +15,19 @@ data Operator = Pow   -- Возведение в степень
               | Ge    -- Больше или равно
               | Gt    -- Больше
 
+instance Show Operator where
+    show Pow = "^"
+    show Mult = "*"
+    show Div = "/"
+    show Plus = "+"
+    show Minus = "-"
+    show Eq = "=="
+    show Neq = "!="
+    show Le = "<="
+    show Lt = "<"
+    show Ge = ">="
+    show Gt = ">"
+
 -- Выражения (expressions)
 data Expr = Ident Var                -- Идентификатор
           | Num Int                  -- Число
@@ -33,4 +46,21 @@ data Stmt = Ignore Expr               -- Инструкция, которая я
 data Program = Program Stmt -- Программа является инструкцией
 
 printer :: Program -> String
-printer = undefined
+printer (Program s) = printS s where
+printS (Ignore x) = printE x ++ ";"
+printS (If e1 tr fls) = "if (" ++ printE e1 ++ ") then {\n" ++ printS tr ++ "}\n" ++ case fls of
+    Just v -> "else {\n" ++ printS v ++ "}\n"
+    Nothing -> ""
+printS (While expr stm) = "while (" ++ printE expr ++ ") {\n" ++ printS stm ++ "}\n"
+printS (Assign v e) = "var " ++ v ++ " = " ++ printE e ++ ";"
+printS (Seq (s:se)) = printS s ++ "\n" ++ printS (Seq se)
+printS (Seq []) = ""
+printS (Read v) = "read("++v++");"
+printS (Write e) = "write(" ++ printE e ++ ");"
+
+printE (Ident v) = show v
+printE (Num i) = show i
+printE (BinOp op e1 e2) = "(" ++ printE e1 ++ show op ++ printE e2 ++ ")"
+
+expr = Seq [Ignore $ Ident "x", Ignore $ Ident "y"]
+expr2 = While (Num 5) (If (Num 6) (Ignore $ Num 6) Nothing)
