@@ -1,0 +1,61 @@
+name:                fl2021-itmo-spr
+version:             0.1.0.0
+github:              "kajigor/fl2021-itmo-spr"
+license:             BSD3
+author:              "Ekaterina Verbitskaia"
+maintainer:          "kajigor@gmail.com"
+copyright:           "2021 Ekaterina Verbitskaia"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/kajigor/fl2021-itmo-spr#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- megaparsec
+- parser-combinators
+
+ghc-options:
+  - -fwarn-unused-imports
+
+library:
+  source-dirs: src
+
+executables:
+  exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - fl2021-itmo-spr
+    - optparse-applicative
+    - filepath
+
+tests:
+  fl2021-itmo-spr-test:
+    main:                Test.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - fl2021-itmo-spr
+    - hedgehog
+    - HUnit
+    - tasty
+    - tasty-hedgehog
+    - tasty-hunit
+    - tasty-discover
