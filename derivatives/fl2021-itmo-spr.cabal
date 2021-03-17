@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 486e4a0cade05a8f0b82cf9fa5ead501c74aeadfed8feaab1eeffbbc92e5ddfd
+-- hash: 55e13104c16a85ed4b5d38b6c0705ce377b0e67f7328fd7da990aa821f00d18f
 
 name:           fl2021-itmo-spr
 version:        0.1.0.0
@@ -49,6 +49,7 @@ test-suite test
   main-is: Test.hs
   other-modules:
       Test.Regexp
+      Test.RegTest
       Paths_fl2021_itmo_spr
   hs-source-dirs:
       test
@@ -63,4 +64,6 @@ test-suite test
     , tasty-discover
     , tasty-hedgehog
     , tasty-hunit
+    , deepseq
+    , time
   default-language: Haskell2010

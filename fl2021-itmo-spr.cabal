@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8134db4f795a93602aa65c95d2a3efd64ce3b3b4039a2d8a75f36f719909d7cc
+-- hash: 762de8cd071a3d632b52f413438307a2985a42f9b9ad6e8e34523540f3a927d1
 
 name:           fl2021-itmo-spr
 version:        0.1.0.0
@@ -29,6 +29,7 @@ library
       AstStmt
       Expr
       LParser
+      LParserDeriv
       Parser
       Parser.Combinators
       Parser.Common
@@ -65,6 +66,7 @@ test-suite fl2021-itmo-spr-test
       Test.Parser.Common
       Test.Parser.Infix
       Test.Parser.LTest
+      Test.Parser.RegTest
       Paths_fl2021_itmo_spr
   hs-source-dirs:
       test

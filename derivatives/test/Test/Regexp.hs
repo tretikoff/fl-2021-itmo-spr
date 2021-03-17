@@ -1,5 +1,4 @@
 module Test.Regexp where
-
 import Test.HUnit (Assertion, assertBool)
 import Regexp (Regexp (..), match)
 
